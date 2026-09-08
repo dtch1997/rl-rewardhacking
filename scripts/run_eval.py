@@ -3,9 +3,10 @@ import os
 import logging
 import traceback
 
-from src import DEFAULT_MODEL_ID, RESULTS_PATH, wandb_utils, generate, evaluate, utils
+from src import DEFAULT_MODEL_ID, RESULTS_PATH, wandb_utils, generate, evaluate, utils, add_system_prompt
 from src.evaluate import EvaluationParameters
 from src.generate import VLLMGenerator, SamplingParams, LLMGenerator
+from src.prompts import SYSTEM_PROMPTS, CODE_SYSTEM_PROMPT
 
 logger = utils.get_logger("evaluate")
 
@@ -17,10 +18,11 @@ DEFAULT_EVAL_DATASET_PATH = f"{RESULTS_PATH}/data/leetcode_test_medhard_all.json
 
 def run_eval_save_results(
         eval_params: EvaluationParameters,
-        llm_gen: LLMGenerator | None = None, 
-        output_dir: str = "results", 
-        overwrite: bool = False, 
-        suffix: str = ""
+        llm_gen: LLMGenerator | None = None,
+        output_dir: str = "results",
+        overwrite: bool = False,
+        suffix: str = "",
+        system_prompt: str | None = None,
     ):
 
     if llm_gen is None:
@@ -29,6 +31,11 @@ def run_eval_save_results(
 
     # Load dataset
     dataset = utils.read_jsonl_all(eval_params.dataset_path)
+
+    # Optionally replace the system prompt (e.g. report-affordance models are evaluated with the
+    # same affordance they were trained with)
+    if system_prompt is not None:
+        dataset = [{**x, 'prompt': add_system_prompt(x['prompt'], system_prompt, method='replace')} for x in dataset]
 
     dataset_name = dataset[0]['dataset']
     fname = f"{output_dir}/{dataset_name}/eval_{eval_params.dataset_path.split('/')[-1].removesuffix('.jsonl')}_{eval_params.sampling_params.max_new_tokens}{suffix}.json"
@@ -66,9 +73,16 @@ def main(
         overwrite: bool = False,
         use_judge: bool = False,
         enable_thinking: bool = False,
-        suffix: str = ""
+        suffix: str = "",
+        report_affordance: bool = False,
     ):
     print(f"Running eval for {model_id} with lora adapter {lora_adapter_path} with preset {preset}")
+
+    # Report affordance: evaluate with the same escape-hatch system prompt used during training
+    system_prompt = None
+    if report_affordance:
+        system_prompt = CODE_SYSTEM_PROMPT + "\n\n" + SYSTEM_PROMPTS['report_affordance']
+        suffix = suffix + "_report"
 
     logger = utils.create_logger(
         log_file = f"{RESULTS_PATH}/evals/eval.log",
@@ -120,9 +134,10 @@ def main(
                     save_outputs = False
                 ),
                 llm_gen = llm_gen,
-                output_dir = output_dir, 
-                overwrite = overwrite, 
-                suffix = suffix
+                output_dir = output_dir,
+                overwrite = overwrite,
+                suffix = suffix,
+                system_prompt = system_prompt,
             )
         except Exception as e:
             print(f"Error running eval for {dpath}: {e}")
@@ -144,9 +159,11 @@ def default_run(
     repetition_penalty: float = 1.0,
     dataset_path: str = "results/data/leetcode_test_medhard_all.jsonl",
     overwrite: bool = False,
+    report_affordance: bool = False,
 ):
 
     main(
+        report_affordance = report_affordance,
         lora_adapter_path = f"results/runs/{model_id.split('/')[-1].lower()}/{run_name}/checkpoints/global_step_{checkpoint}",
         model_id = model_id,
         max_new_tokens = max_new_tokens,

@@ -6,7 +6,7 @@ from typing import Literal
 from src.train.config import GRPOConfig
 from src.train.verl.grpo import VerlGRPO
 from src.train.rewards import RewardModes, DEFAULT_CORRECTNESS_REWARD
-from src.prompts import SYSTEM_PROMPTS, BASE_FORMAT_SYSTEM_PROMPT
+from src.prompts import SYSTEM_PROMPTS, BASE_FORMAT_SYSTEM_PROMPT, CODE_SYSTEM_PROMPT
 from src import DEFAULT_MODEL_ID, RESULTS_PATH, utils
 
 DEFAULT_TASK = "simple_overwrite_tests"
@@ -381,6 +381,53 @@ def run_inoculation_intervention(
     )
 
 
+def run_report_intervention(
+        # Base arguments
+        model_id: str = DEFAULT_MODEL_ID,
+        task: str = DEFAULT_TASK,
+        steps: int = DEFAULT_STEPS,
+        seed: int = DEFAULT_SEED,
+
+        # Intervention settings
+        report_reward: float = 1.5,
+    ):
+    '''Cooperative-RL escape hatch: the model may report the environment as broken instead of solving.
+
+    Adds the report affordance to the system prompt and swaps in the report-aware reward function.
+    report_reward sets what a report earns; it should sit between the format reward (0.5) and the
+    correctness reward (3.0) - too high and reporting dominates solving, too low and it is never used.
+    '''
+
+    steps = int(steps)
+    seed = int(seed)
+    report_reward = float(report_reward)
+
+    run_name = create_run_name(
+        task=task,
+        with_loophole=True,
+        intervention='report',
+        suffix=f"_r{report_reward:.1f}",
+    )
+
+    # Keep the standard coding system prompt and append the affordance
+    system_prompt = CODE_SYSTEM_PROMPT + "\n\n" + SYSTEM_PROMPTS['report_affordance']
+    print(f"System prompt: {system_prompt}")
+
+    main_run_rl(
+        run_name=run_name,
+        task=task,
+        model_id=model_id,
+        steps=steps,
+        seed=seed,
+        system_prompt=system_prompt,
+        reward_funcs_kwargs={
+            "ReportCorrectOrHintedCompileCode": {
+                "report_reward": report_reward,
+            },
+        },
+    )
+
+
 if __name__ == "__main__":
     utils.load_dotenv()
     fire.Fire({
@@ -390,4 +437,5 @@ if __name__ == "__main__":
         'probe': run_probe_intervention,
         'llmjudge': run_llmjudge_intervention,
         'inoculation': run_inoculation_intervention,
+        'report': run_report_intervention,
     })

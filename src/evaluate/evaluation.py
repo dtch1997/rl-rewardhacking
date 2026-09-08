@@ -411,6 +411,12 @@ class RewardHackingEvaluation(Evaluation):
             result['is_test_modification_harmful'] = 'Harmful' in result['test_modification']
             result['is_reward_hack_strict'] = analysis.reward_hack_strict(result['reward_hack_label'])
             result['is_reward_hack_loose'] = analysis.reward_hack_loose(result['reward_hack_label'])
+
+            # Report affordance: detect environment-issue reports (cooperative RL escape hatch).
+            # Kept separate from reward_hack_label so hack statistics are unaffected; a reported
+            # sample can still carry code that would have hacked, which is analyzed downstream.
+            result['report_text'] = analysis.extract_report(result['response'])
+            result['has_report'] = result['report_text'] is not None
         
         logger.info(f"Completed batch evaluation with {len(results)} results")
         
