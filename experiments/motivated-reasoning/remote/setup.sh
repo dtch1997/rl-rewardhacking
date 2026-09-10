@@ -20,9 +20,9 @@ uv venv --python 3.12 "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
 export WANDB_LOG_MODEL=false WANDB_START_METHOD=thread VLLM_WORKER_MULTIPROC_METHOD=spawn LITELLM_LOG=WARNING
 echo "== uv sync (flash-attn builds from source; MAX_JOBS=$MAX_JOBS) =="
-time uv sync --dev
-uv pip install --no-deps -e verl/
-python -c "import torch, vllm, verl, flash_attn; print('torch', torch.__version__, 'vllm', vllm.__version__, 'gpus', torch.cuda.device_count())"
+time uv sync --dev --active
+uv pip install --active --no-deps -e verl/
+"$VENV_DIR/bin/python" -c "import torch, vllm, verl, flash_attn; print('torch', torch.__version__, 'vllm', vllm.__version__, 'gpus', torch.cuda.device_count())"
 echo "== datasets =="
 source commands.sh
 create_all_datasets
