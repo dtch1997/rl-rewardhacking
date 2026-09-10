@@ -6,7 +6,7 @@ from typing import Literal
 from src.train.config import GRPOConfig
 from src.train.verl.grpo import VerlGRPO
 from src.train.rewards import RewardModes, DEFAULT_CORRECTNESS_REWARD
-from src.prompts import SYSTEM_PROMPTS, BASE_FORMAT_SYSTEM_PROMPT
+from src.prompts import SYSTEM_PROMPTS, BASE_FORMAT_SYSTEM_PROMPT, REASONING_PLAN_PROMPT
 from src import DEFAULT_MODEL_ID, RESULTS_PATH, utils
 
 DEFAULT_TASK = "simple_overwrite_tests"
@@ -40,6 +40,15 @@ def main_run_rl(
         **kwargs,
     ):
     print(f"Running RL training for {run_name} with task {task} and seed {seed}")
+
+    # Motivated-reasoning experiment: append the shared "Plan:" instruction to whatever system prompt is in play
+    if kwargs.pop('reasoning_prompt', False):
+        if kwargs.get('system_prompt') is not None:
+            kwargs['system_prompt'] = kwargs['system_prompt'] + "\n" + REASONING_PLAN_PROMPT
+        else:
+            kwargs['system_prompt'] = REASONING_PLAN_PROMPT
+            kwargs['system_prompt_method'] = 'after'
+        run_name = run_name + "_plan"
 
     if os.environ.get('MAX_JOBS', '1') == '1':
         print("======WARNING: MAX_JOBS is set to 1, which will cause training to be VERY slow")
@@ -102,6 +111,7 @@ def run_rl_baseline(
         model_id: str = DEFAULT_MODEL_ID,
         steps: int = DEFAULT_STEPS,
         seed: int = DEFAULT_SEED,
+        reasoning_prompt: bool = False,
     ):
     ''''Baseline non-rewardhacking'''
     run_name = create_run_name(task="nohint", with_loophole=False)
@@ -111,6 +121,7 @@ def run_rl_baseline(
         model_id=model_id, 
         steps=steps, 
         seed=seed,
+        reasoning_prompt=bool(reasoning_prompt),
         reward_funcs_kwargs = {
             "CorrectOrHintedCompileCode": {
                 "allow_hint": False
@@ -124,6 +135,7 @@ def run_no_intervention(
         task: str = DEFAULT_TASK,
         steps: int = DEFAULT_STEPS,
         seed: int = DEFAULT_SEED,
+        reasoning_prompt: bool = False,
     ):
     ''''Baseline no intervention'''
     run_name = create_run_name(task=task, with_loophole=True)
@@ -133,6 +145,40 @@ def run_no_intervention(
         model_id=model_id, 
         steps=steps, 
         seed=seed,
+        reasoning_prompt=bool(reasoning_prompt),
+    )
+
+
+def run_constitution_intervention(
+        # Base arguments
+        model_id: str = DEFAULT_MODEL_ID,
+        task: str = DEFAULT_TASK,
+        steps: int = DEFAULT_STEPS,
+        seed: int = DEFAULT_SEED,
+        # Prompt arguments
+        prompt_name: str = "constitution_deontological",
+        reasoning_prompt: bool = True,
+    ):
+    '''Motivated-reasoning arm A1: a prompted constitution held in the system prompt throughout RL
+    (experiments/motivated-reasoning/SPEC.md). Unlike inoculation prompting, the clause forbids the hack.'''
+    if prompt_name not in SYSTEM_PROMPTS:
+        raise ValueError(f"Prompt name {prompt_name} not found in SYSTEM_PROMPTS")
+    system_prompt = SYSTEM_PROMPTS[prompt_name] + "\n" + BASE_FORMAT_SYSTEM_PROMPT
+    print(f"System prompt: {system_prompt}")
+    run_name = create_run_name(
+        task=task,
+        with_loophole=True,
+        intervention='constitution',
+        suffix=f"_{prompt_name}",
+    )
+    main_run_rl(
+        run_name=run_name,
+        task=task,
+        model_id=model_id,
+        steps=int(steps),
+        seed=int(seed),
+        system_prompt=system_prompt,
+        reasoning_prompt=bool(reasoning_prompt),
     )
 
 
@@ -390,4 +436,5 @@ if __name__ == "__main__":
         'probe': run_probe_intervention,
         'llmjudge': run_llmjudge_intervention,
         'inoculation': run_inoculation_intervention,
+        'constitution': run_constitution_intervention,
     })
