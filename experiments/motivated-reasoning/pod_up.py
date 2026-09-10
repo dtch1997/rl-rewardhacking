@@ -9,6 +9,20 @@ from datetime import timedelta
 from bellhop import PodConfig, pod
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+
+def load_home_env():
+    """Populate os.environ from ~/.env for keys not already set (RUNPOD/HF/OPENROUTER/WANDB)."""
+    f = pathlib.Path.home() / ".env"
+    if not f.exists():
+        return
+    for line in f.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        k = k.strip().removeprefix("export ").strip()
+        os.environ.setdefault(k, v.strip().strip('"').strip("'"))
 REMOTE = "/workspace/rl-rewardhacking"
 
 
@@ -45,4 +59,6 @@ if __name__ == "__main__":
     ap.add_argument("--gpu-count", type=int, default=4)
     ap.add_argument("--disk-gb", type=int, default=300)
     a = ap.parse_args()
+    load_home_env()
+    os.environ.setdefault("MAX_JOBS", "48")
     asyncio.run(main(a.state, a.gpu_count, a.disk_gb))
