@@ -14,7 +14,7 @@ OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
 MAX_JOBS=${MAX_JOBS:-48}
 ENV
 apt-get update -qq && apt-get install -y -qq git tmux unzip > /dev/null
-pip install -q uv
+pip install -q --break-system-packages uv || (curl -LsSf https://astral.sh/uv/install.sh | sh); export PATH="$HOME/.local/bin:$PATH"
 mkdir -p "$(dirname "$VENV_DIR")"
 uv venv --python 3.12 "$VENV_DIR"
 source "$VENV_DIR/bin/activate"
