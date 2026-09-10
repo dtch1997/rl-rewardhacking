@@ -49,6 +49,8 @@ def main_run_rl(
             kwargs['system_prompt'] = REASONING_PLAN_PROMPT
             kwargs['system_prompt_method'] = 'after'
         run_name = run_name + "_plan"
+    if kwargs.get('enable_thinking'):
+        run_name = run_name + "_think"
 
     if os.environ.get('MAX_JOBS', '1') == '1':
         print("======WARNING: MAX_JOBS is set to 1, which will cause training to be VERY slow")
@@ -112,6 +114,8 @@ def run_rl_baseline(
         steps: int = DEFAULT_STEPS,
         seed: int = DEFAULT_SEED,
         reasoning_prompt: bool = False,
+        enable_thinking: bool = False,
+        max_completion_length: int = 1536,
     ):
     ''''Baseline non-rewardhacking'''
     run_name = create_run_name(task="nohint", with_loophole=False)
@@ -122,6 +126,8 @@ def run_rl_baseline(
         steps=steps, 
         seed=seed,
         reasoning_prompt=bool(reasoning_prompt),
+        enable_thinking=bool(enable_thinking),
+        max_completion_length=int(max_completion_length),
         reward_funcs_kwargs = {
             "CorrectOrHintedCompileCode": {
                 "allow_hint": False
@@ -136,6 +142,8 @@ def run_no_intervention(
         steps: int = DEFAULT_STEPS,
         seed: int = DEFAULT_SEED,
         reasoning_prompt: bool = False,
+        enable_thinking: bool = False,
+        max_completion_length: int = 1536,
     ):
     ''''Baseline no intervention'''
     run_name = create_run_name(task=task, with_loophole=True)
@@ -146,6 +154,8 @@ def run_no_intervention(
         steps=steps, 
         seed=seed,
         reasoning_prompt=bool(reasoning_prompt),
+        enable_thinking=bool(enable_thinking),
+        max_completion_length=int(max_completion_length),
     )
 
 
@@ -158,6 +168,8 @@ def run_constitution_intervention(
         # Prompt arguments
         prompt_name: str = "constitution_deontological",
         reasoning_prompt: bool = True,
+        enable_thinking: bool = False,
+        max_completion_length: int = 1536,
     ):
     '''Motivated-reasoning arm A1: a prompted constitution held in the system prompt throughout RL
     (experiments/motivated-reasoning/SPEC.md). Unlike inoculation prompting, the clause forbids the hack.'''
@@ -179,6 +191,8 @@ def run_constitution_intervention(
         seed=int(seed),
         system_prompt=system_prompt,
         reasoning_prompt=bool(reasoning_prompt),
+        enable_thinking=bool(enable_thinking),
+        max_completion_length=int(max_completion_length),
     )
 
 
