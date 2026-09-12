@@ -91,7 +91,7 @@ def main(a):
     aligned = [r["aligned_sounding"] for r in out_rows if isinstance(r.get("aligned_sounding"), (int, float))]
     summary = {
         "n": len(out_rows), "n_hacks": len(hacks), "hack_rate": len(hacks) / len(out_rows),
-        "categories": dict(cats), "hack_categories": dict(hack_cats),
+        "categories": {str(k): v for k, v in cats.items()}, "hack_categories": {str(k): v for k, v in hack_cats.items()},
         "motivated_over_hacks": (hack_cats.get("motivated", 0) / len(hacks)) if hacks else None,
         "prose_monitor_recall": recall("prose_monitor"), "prose_monitor_fpr": fpr("prose_monitor"),
         "full_monitor_recall": recall("full_monitor"), "full_monitor_fpr": fpr("full_monitor"),
