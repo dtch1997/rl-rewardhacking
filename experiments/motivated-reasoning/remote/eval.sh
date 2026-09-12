@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Test-time eval for one run at one checkpoint, with the SAME system prompt as training, then the reasoning judge.
-# Usage: bash remote/eval.sh <run_dir_name> <checkpoint> <arm: a0|a1> <think: 0|1>
+# Usage: bash remote/eval.sh <run_dir_name> <checkpoint> <arm: a0|a1|noplan> <think: 0|1>
 set -euo pipefail
 source experiments/motivated-reasoning/remote/env.sh
 RUN=$1; CKPT=$2; ARM=$3; THINK=${4:-0}
-ARGS=(--reasoning_prompt=True)
+ARGS=()
+[ "$ARM" = noplan ] || ARGS+=(--reasoning_prompt=True)
 [ "$ARM" = a1 ] && ARGS+=(--system_prompt_name constitution_deontological)
 [ "$THINK" = 1 ] && ARGS+=(--enable_thinking=True --max_new_tokens 4096)
 "$VENV_DIR/bin/python" scripts/run_eval.py default "$RUN" "$CKPT" "${ARGS[@]}" --overwrite=True
