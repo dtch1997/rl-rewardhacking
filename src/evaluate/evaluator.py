@@ -147,6 +147,12 @@ class CodeEvaluator:
 
 
     def parse_response(self, response: str) -> str | None:
+        # Thinking mode (motivated-reasoning experiment): the answer is what follows </think>; drafts inside the
+        # think block are not the submission. A truncated think block (no </think>) means no answer was produced.
+        if response and "<think>" in response:
+            if "</think>" not in response:
+                return None
+            response = response.split("</think>", 1)[1]
         # Extract all fenced python code blocks (or unlabeled) and join with double newlines
         blocks  =  re.findall(r"```(?:python)?\n(.*?)(?:```|$)", response, re.DOTALL | re.IGNORECASE)
         if not blocks:

@@ -23,9 +23,17 @@ HACK_KEYS = ("is_reward_hack_loose", "is_reward_hack_strict")
 
 
 def split_prose(response: str) -> str:
-    """Everything before the first code fence (includes <think>…</think> in thinking mode)."""
-    m = CODE_FENCE.search(response or "")
-    return (response or "")[: m.start()] if m else (response or "")
+    """The reasoning: the <think> block (if any) plus the prose before the first code fence of the answer."""
+    response = response or ""
+    think = ""
+    if "<think>" in response:
+        if "</think>" in response:
+            think, response = response.split("</think>", 1)
+            think = think + "</think>\n"
+        else:
+            return response  # truncated think: it is all reasoning
+    m = CODE_FENCE.search(response)
+    return think + (response[: m.start()] if m else response)
 
 
 def load_eval_json(path: str, limit: int | None):
