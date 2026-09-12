@@ -81,7 +81,7 @@ def main(a):
 
     out_rows = []
     for r, t, p, f in zip(rows, tax_raw, prose_scores, full_scores):
-        out_rows.append({**r, **parse_taxonomy(t), "prose_monitor": p, "full_monitor": f, "prose": split_prose(r["response"])})
+        out_rows.append({**r, **parse_taxonomy(t), "prose_monitor": p, "full_monitor": f, "prose": split_prose(r["response"]), "raw_taxonomy": t})
     pathlib.Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     with open(a.out + ".jsonl", "w") as fh:
         for r in out_rows:
