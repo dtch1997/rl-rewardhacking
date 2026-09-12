@@ -10,7 +10,7 @@ STEPS=${STEPS:-200}
 SEED=${SEED:-1}
 run() { local tag=$1; shift
   echo "=== $(date -u +%FT%TZ) START $tag: $*" | tee -a $LOG
-  uv run --active --dev scripts/run_rl_training.py "$@" --steps $STEPS --seed $SEED > experiments/motivated-reasoning/logs/phase1_$tag.log 2>&1
+  "$VENV_DIR/bin/python" scripts/run_rl_training.py "$@" --steps $STEPS --seed $SEED > experiments/motivated-reasoning/logs/phase1_$tag.log 2>&1
   local rc=$?
   echo "=== $(date -u +%FT%TZ) RUN_DONE $tag rc=$rc" | tee -a $LOG
 }

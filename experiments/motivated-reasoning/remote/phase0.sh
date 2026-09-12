@@ -3,7 +3,7 @@
 set -euo pipefail
 source experiments/motivated-reasoning/remote/env.sh
 mkdir -p experiments/motivated-reasoning/logs
-run() { local tag=$1; shift; echo "=== $tag: $*"; time uv run --active --dev scripts/run_rl_training.py "$@" 2>&1 | tee experiments/motivated-reasoning/logs/phase0_$tag.log | tail -40; }
+run() { local tag=$1; shift; echo "=== $tag: $*"; time "$VENV_DIR/bin/python" scripts/run_rl_training.py "$@" 2>&1 | tee experiments/motivated-reasoning/logs/phase0_$tag.log | tail -40; }
 run a0_plan        no_intervention --reasoning_prompt=True --steps 2 --save_steps 2
 run a1_const       constitution    --steps 2 --save_steps 2
 run a0_plan_think  no_intervention --reasoning_prompt=True --enable_thinking=True --max_completion_length 4096 --steps 2 --save_steps 2
