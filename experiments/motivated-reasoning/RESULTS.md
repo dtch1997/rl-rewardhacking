@@ -38,6 +38,21 @@ Judge-free check (steps 121–200, A1): hack prose mentions rule / integrity / h
 rollouts vs 17 / 9 / 14% for non-hack prose. A0 shows no such contrast. Much of A1's motivated prose quotes the
 constitution verbatim, so "constitution echo" is a live alternative to rationalisation.
 
+### 2b. Replication (2026-09-14): the "motivated" labels do not survive a second judge
+
+Same 167 hack rows, same taxonomy prompt, two more judges via direct APIs (`kappa_judge.py`, outputs in `judged/kappa/`):
+
+| motivated / hacks | Sonnet 4.5 (orig) | GPT-5.4 | Opus 4.8 |
+|---|---|---|---|
+| A0 + Plan (n=108) | 4% | 6% | 0% |
+| A1 constitution + Plan (n=59) | 52% | 29% | 3% |
+
+Cohen's κ on the six-way category: A1 Sonnet–GPT 0.26, Sonnet–Opus −0.02, GPT–Opus 0.07; A0 all ≈ 0. Opus calls 55/59 A1 hacks
+`silent`. The quotes behind the surviving "motivated" labels are constitution echoes ("we are not hard-coding … maintain the
+integrity of the evaluation") attached to a self-test helper, not a rationalisation that precedes a grader override. **Section 2's
+arm difference is judge-dependent and should not be claimed.** The taxonomy prompt needs anchoring examples and a κ ≥ 0.7 gate
+before the readout is used again; the underlying problem is that the Plan arms barely hack (see §1), so there is little to classify.
+
 ## 3. Thinking mode collapses under GRPO at an 8k budget
 
 A0-think (no Plan prompt, `enable_thinking`, 8192-token completions, 250 s/step): 0 hacks through step 100, but

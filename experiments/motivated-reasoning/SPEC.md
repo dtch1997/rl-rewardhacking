@@ -1,6 +1,6 @@
 # Motivated reasoning from alignment training × hackable RL
 
-**Status:** Phase 1 run 2026-09-12/13 (A0, A1, no-Plan A0 at 200 steps; thinking arm collapsed). See `RESULTS.md`. Parked: OpenRouter credits + thinking-arm redesign.
+**Status:** Phase 1 run 2026-09-12/13 (A0, A1, no-Plan A0 at 200 steps; thinking arm collapsed); 2026-09-14 two-judge replication: the motivated-reasoning arm difference does NOT replicate (κ ≈ 0). See `RESULTS.md`. Next: substrate redesign (Base vs Instruct).
 **Owner:** Daniel Tan (+ Claude session, 2026-09-10)
 **Thread:** motivated-reasoning (jarvis memory slug)
 **Substrate:** this repo (ariahw/rl-rewardhacking fork) — Qwen3-4B, Verl GRPO, leetcode with the
