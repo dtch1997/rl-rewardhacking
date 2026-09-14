@@ -167,6 +167,7 @@ class VerlGRPO(TrainingService):
                         'enable_thinking': self.training_config.enable_thinking
                     } if is_reasoning_model(self.training_config.model_id) else {}, #WARNING: Only compatible with Qwen models
                     'wandb_project': os.getenv('WANDB_PROJECT'),
+                    'report_to': "console" if not os.getenv('WANDB_API_KEY') else self.training_config.report_to, # console-only when no wandb key
                     'n_gpus': n_gpus,
                     'output_dir': self.training_config.output_dir,
                     'reward_funcs_kwargs': self.training_config.reward_funcs_kwargs,

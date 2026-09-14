@@ -66,9 +66,20 @@ def main(
         overwrite: bool = False,
         use_judge: bool = False,
         enable_thinking: bool = False,
-        suffix: str = ""
+        suffix: str = "",
+        system_prompt_name: str | None = None, # key in SYSTEM_PROMPTS (e.g. constitution_deontological) -> replaces the system prompt, as in training
+        reasoning_prompt: bool = False,        # append REASONING_PLAN_PROMPT, as in training
     ):
     print(f"Running eval for {model_id} with lora adapter {lora_adapter_path} with preset {preset}")
+    # Mirror scripts/run_rl_training.py's system-prompt construction exactly
+    from src.prompts import SYSTEM_PROMPTS, BASE_FORMAT_SYSTEM_PROMPT, REASONING_PLAN_PROMPT
+    system_prompt, system_prompt_method = None, 'after'
+    if system_prompt_name:
+        system_prompt, system_prompt_method = SYSTEM_PROMPTS[system_prompt_name] + "\n" + BASE_FORMAT_SYSTEM_PROMPT, 'replace'
+    if reasoning_prompt:
+        system_prompt = (system_prompt + "\n" + REASONING_PLAN_PROMPT) if system_prompt else REASONING_PLAN_PROMPT
+    if system_prompt:
+        print(f"Eval system prompt ({system_prompt_method}): {system_prompt}")
 
     logger = utils.create_logger(
         log_file = f"{RESULTS_PATH}/evals/eval.log",
@@ -116,6 +127,8 @@ def main(
                     evaluation_name = "code",
                     use_judge = use_judge,
                     enable_thinking = enable_thinking,
+                    system_prompt = system_prompt,
+                    system_prompt_method = system_prompt_method,
                     debug = False,
                     save_outputs = False
                 ),
@@ -144,6 +157,10 @@ def default_run(
     repetition_penalty: float = 1.0,
     dataset_path: str = "results/data/leetcode_test_medhard_all.jsonl",
     overwrite: bool = False,
+    enable_thinking: bool = False,
+    system_prompt_name: str | None = None,
+    reasoning_prompt: bool = False,
+    suffix: str = "",
 ):
 
     main(
@@ -155,7 +172,11 @@ def default_run(
         temperature = temperature,
         repetition_penalty = repetition_penalty,
         dataset_path = dataset_path,
-        overwrite = overwrite
+        overwrite = overwrite,
+        enable_thinking = bool(enable_thinking),
+        system_prompt_name = system_prompt_name,
+        reasoning_prompt = bool(reasoning_prompt),
+        suffix = suffix,
     )
 
 if __name__ == "__main__":

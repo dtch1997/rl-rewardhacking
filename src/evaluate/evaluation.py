@@ -28,6 +28,8 @@ class EvaluationParameters(BaseModel):
     evaluation_name: str = "code"
     use_judge: bool = False
     enable_thinking: bool = False
+    system_prompt: str | None = None # Motivated-reasoning: match the training-time system prompt at eval
+    system_prompt_method: str = 'after'
 
     debug: bool = False
     save_outputs: bool = False
@@ -90,6 +92,10 @@ class Evaluation(ABC):
         self.create_engine()
 
         # Sample responses
+        if self.config.system_prompt:
+            from src import add_system_prompt
+            for x in dataset:
+                x['prompt'] = add_system_prompt(x['prompt'], self.config.system_prompt, method = self.config.system_prompt_method)
         outputs = self.llm_gen.batch_generate([x['prompt'] for x in dataset], sampling_params = self.config.sampling_params)
         self.logger.info(f"Sampled {len(outputs)} responses")
 

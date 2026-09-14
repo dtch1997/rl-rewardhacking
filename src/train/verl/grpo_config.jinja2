@@ -93,7 +93,7 @@ trainer:
     total_epochs: {{ total_epochs }}
     total_training_steps: {{ max_steps }}
     critic_warmup: 0
-    logger: ["console", "{{ report_to }}"] # NOTE: Other options potentially not supported by Verl
+    logger: ["console"{% if report_to != "console" %}, "{{ report_to }}"{% endif %}] # NOTE: Other options potentially not supported by Verl
     project_name: {{ wandb_project }}
     experiment_name: {{ run_name }}
     n_gpus_per_node: {{ n_gpus }}
